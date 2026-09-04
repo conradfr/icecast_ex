@@ -2,7 +2,7 @@ defmodule IcecastEx.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/conradfr/icecast_ex"
-  @version "1.0.1"
+  @version "1.0.2"
 
   def project do
     [
