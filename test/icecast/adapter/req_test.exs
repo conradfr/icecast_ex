@@ -29,5 +29,17 @@ defmodule Icecast.Adapter.ReqTest do
       # then fail on the missing icy-metaint header
       assert {:error, nil} = ReqAdapter.read_meta(@redirect)
     end
+
+    test ":redirect false stops on the redirect" do
+      # unlike the hackney adapter, which answers {:error, :redirect}, Req hands
+      # back the 3xx response itself: it carries no icy-metaint either, so the
+      # two cases are not told apart here
+      assert {:error, nil} = ReqAdapter.read_meta(@redirect, redirect: false)
+    end
+
+    test ":max_redirects caps the number of hops" do
+      assert {:error, %Req.TooManyRedirectsError{max_redirects: 0}} =
+               ReqAdapter.read_meta(@redirect, max_redirects: 0)
+    end
   end
 end

@@ -7,7 +7,7 @@ if Code.ensure_loaded?(:hackney) do
 
     ```elixir
     [
-        follow_redirect: false,
+        follow_redirect: true,
         max_redirects: 5,
         pool: false
     ]
@@ -132,7 +132,9 @@ if Code.ensure_loaded?(:hackney) do
     end
 
     defp follow_redirect(url, headers, opts, hackney_opts, redirect_count) do
-      case {Keyword.get(opts, :follow_redirect, false), get_header(headers, "location")} do
+      follow? = Keyword.get(opts, :follow_redirect, @opts_default[:follow_redirect])
+
+      case {follow?, get_header(headers, "location")} do
         {false, _} ->
           {:error, :redirect}
 

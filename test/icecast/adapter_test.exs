@@ -13,6 +13,8 @@ defmodule Icecast.AdapterTest do
   @stream "http://ice1.somafm.com/lush-128-mp3"
   # 200 OK, but an HTML page: no `icy-metaint` header.
   @not_a_stream "https://somafm.com/"
+  # 301 to https://somafm.com/, the same HTML page.
+  @redirect "http://somafm.com/"
   # `.invalid` is reserved by RFC 2606 and never resolves.
   @unknown_host "http://ice1.somafm.invalid/lush-128-mp3"
 
@@ -49,6 +51,12 @@ defmodule Icecast.AdapterTest do
 
       test "returns an error rather than raising on an unresolvable host" do
         assert {:error, _reason} = @adapter.read_meta(@unknown_host)
+      end
+
+      test "follows redirects by default" do
+        # both adapters default to following the location header; the target is
+        # an HTML page, so the read gets that far and then finds no icy-metaint
+        assert {:error, nil} = @adapter.read_meta(@redirect)
       end
 
       test "is reachable through Icecast.read_meta/3" do
