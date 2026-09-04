@@ -11,7 +11,7 @@ in `mix.exs`
 ```elixir
 def deps do
   [
-    {:icecast, git: "https://github.com/conradfr/icecast_ex.git", branch: "~> 1.0.0"},
+    {:icecast, "~> 1.0.1"},
   ]
 end
 ```

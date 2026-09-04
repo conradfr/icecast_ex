@@ -24,3 +24,6 @@ icecast_ex-*.tar
 
 CLAUDE.md
 AGENTS.md
+
+.idea/
+.tool-versions
