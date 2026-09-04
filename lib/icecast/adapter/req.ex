@@ -9,6 +9,8 @@ if Code.ensure_loaded?(Req) do
     :icecast, finch: name_of_instance
     ```
 
+    Icy metadata is an HTTP/1.x convention, so `protocols: [:http1]` is set as default (although it's also currently the default in Finch)
+
     ### Default options
 
     ```elixir
@@ -26,9 +28,11 @@ if Code.ensure_loaded?(Req) do
     ```elixir
     # Only used when no :finch instance is configured
     [
-      timeout: 5000
+      timeout: 5000,
+      protocols: [:http1]
     ]
     ```
+
     """
 
     alias Icecast.Meta
@@ -51,7 +55,9 @@ if Code.ensure_loaded?(Req) do
     # :finch and :connect_options are both set: when a dedicated Finch instance is
     # used, these belong to its own :conn_opts instead.
     @default_connect_options [
-      timeout: @timeout
+      timeout: @timeout,
+      # Icy metadata is an HTTP/1.x convention.
+      protocols: [:http1]
       #      transport_opts: [verify: :verify_none]
     ]
 
@@ -60,7 +66,7 @@ if Code.ensure_loaded?(Req) do
       opts =
         @default_opts
         |> Keyword.merge(finch_opts())
-        |> Keyword.merge(adapter_opts)
+        |> merge_adapter_opts(adapter_opts)
         |> Keyword.put(:into, &collect/2)
 
       case Req.get(url, opts) do
@@ -77,6 +83,18 @@ if Code.ensure_loaded?(Req) do
     rescue
       e ->
         {:error, e}
+    end
+
+    defp merge_adapter_opts(opts, adapter_opts) do
+      merged = Keyword.merge(opts, adapter_opts)
+
+      case {Keyword.get(opts, :connect_options), Keyword.get(adapter_opts, :connect_options)} do
+        {ours, theirs} when is_list(ours) and is_list(theirs) ->
+          Keyword.put(merged, :connect_options, Keyword.merge(ours, theirs))
+
+        _ ->
+          merged
+      end
     end
 
     # A dedicated Finch instance keeps the (many, short-lived, one-per-host) pools

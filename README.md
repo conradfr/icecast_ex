@@ -11,7 +11,7 @@ in `mix.exs`
 ```elixir
 def deps do
   [
-    {:icecast, "~> 1.0.1"},
+    {:icecast, "~> 1.0.2"},
   ]
 end
 ```
