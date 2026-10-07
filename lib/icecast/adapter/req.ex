@@ -3,11 +3,23 @@ if Code.ensure_loaded?(Req) do
     @moduledoc """
     Req adapter
 
-    A Finch instance can be configured.
+    A Finch instance can be configured, either by its name or with the Req `:finch` options.
 
     ```elixir
-    :icecast, finch: name_of_instance
+    config :icecast, finch: name_of_instance
+    config :icecast, finch: [name: name_of_instance, pool_timeout: 10_000]
     ```
+
+    It can also be given at call time, which takes precedence over the configuration:
+
+    ```elixir
+    Icecast.read_meta(url, [finch: name_of_instance], Icecast.Adapter.Req)
+    ```
+
+    When a Finch instance is used, the connection options (timeout, protocols, transport options) are the
+    ones of its pools: `:connect_options` can't be set together with `:finch`.
+
+    `pool_timeout: 5000` is set as default for the Finch instance.
 
     Icy metadata is an HTTP/1.x convention, so `protocols: [:http1]` is set as default (although it's also currently the default in Finch)
 
@@ -86,6 +98,17 @@ if Code.ensure_loaded?(Req) do
     end
 
     defp merge_adapter_opts(opts, adapter_opts) do
+      # a Finch instance given at call time replaces the configured one, or our default connect options
+      {opts, adapter_opts} =
+        case Keyword.pop(adapter_opts, :finch) do
+          {nil, adapter_opts} ->
+            {opts, adapter_opts}
+
+          {finch, adapter_opts} ->
+            {opts |> Keyword.delete(:connect_options) |> Keyword.put(:finch, finch_options(finch)),
+             adapter_opts}
+        end
+
       merged = Keyword.merge(opts, adapter_opts)
 
       case {Keyword.get(opts, :connect_options), Keyword.get(adapter_opts, :connect_options)} do
@@ -102,9 +125,16 @@ if Code.ensure_loaded?(Req) do
     defp finch_opts() do
       case Application.get_env(:icecast, :finch) do
         nil -> [connect_options: @default_connect_options]
-        name -> [finch: name, pool_timeout: @timeout]
+        finch -> [finch: finch_options(finch)]
       end
     end
+
+    # Req (>= 0.7) takes the name of the instance and the pool timeout inside the `:finch` option,
+    # setting them as `finch: name` and `pool_timeout: value` is deprecated and warns at each request.
+    defp finch_options(name) when is_atom(name), do: [name: name, pool_timeout: @timeout]
+
+    defp finch_options(options) when is_list(options),
+      do: Keyword.merge([pool_timeout: @timeout], options)
 
     # ----- body collector -----
 

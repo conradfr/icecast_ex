@@ -11,7 +11,7 @@ in `mix.exs`
 ```elixir
 def deps do
   [
-    {:icecast, "~> 1.0.2"},
+    {:icecast, "~> 1.0.3"},
   ]
 end
 ```
@@ -22,6 +22,8 @@ end
 iex> Icecast.read_meta("http://ice1.somafm.com/lush-128-mp3")
 {:ok, %Meta{}}
 ```
+
+This is a drop-in replacement for shoutcast_ex, with the addition of `:location`, containing the last url after any redirects. 
 
 ## HTTP client adapters
 
@@ -38,19 +40,29 @@ You can use the alternative Req adapter.
 config :icecast, adapter: Icecast.Adapter.Req
 ```
 
-A Finch instance can be configured for it:
+A Finch instance can be configured for it, by its name or with the Req `:finch` options:
 
 ```elixir
 # config/config.exs
 
 # Make sure to install `mint` package as well, recommended
 config :icecast, finch: instance_name
+# or
+config :icecast, finch: [name: instance_name, pool_timeout: 10_000]
 ```
+
+The connection options (timeout, protocols, transport options) are then the ones of the pools of this instance.
 
 ### At call time
 
 ```elixir
-    iex> Shoutcast.read_meta("http://ice1.somafm.com/lush-128-mp3", [], Icecast.Adapter.Req)
+    iex> Icecast.read_meta("http://ice1.somafm.com/lush-128-mp3", [], Icecast.Adapter.Req)
+```
+
+The Finch instance can also be given at call time, it takes precedence over the configuration:
+
+```elixir
+    iex> Icecast.read_meta("http://ice1.somafm.com/lush-128-mp3", [finch: instance_name], Icecast.Adapter.Req)
 ```
 
 ## Documentation

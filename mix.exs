@@ -2,7 +2,7 @@ defmodule IcecastEx.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/conradfr/icecast_ex"
-  @version "1.0.2"
+  @version "1.0.3"
 
   def project do
     [
@@ -27,7 +27,7 @@ defmodule IcecastEx.MixProject do
 
   defp deps do
     [
-      {:hackney, "~> 4.7.0", optional: true},
+      {:hackney, "~> 4.0", optional: true},
       {:req, "~> 0.7.0", optional: true},
       {:ex_doc, ">= 0.0.0", only: :dev}
     ]

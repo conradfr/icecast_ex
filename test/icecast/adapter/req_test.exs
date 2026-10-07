@@ -23,6 +23,33 @@ defmodule Icecast.Adapter.ReqTest do
     end
   end
 
+  describe "finch instance" do
+    setup do
+      name = Module.concat(__MODULE__, "Finch#{System.unique_integer([:positive])}")
+      start_supervised!({Finch, name: name})
+
+      %{finch: name}
+    end
+
+    test "can be given by name at call time, without deprecation warning", %{finch: finch} do
+      warnings =
+        ExUnit.CaptureIO.capture_io(:stderr, fn ->
+          assert {:ok, %Meta{}} = ReqAdapter.read_meta(@stream, finch: finch)
+        end)
+
+      refute warnings =~ "deprecated"
+    end
+
+    test "can be given with its options at call time", %{finch: finch} do
+      assert {:ok, %Meta{}} =
+               ReqAdapter.read_meta(@stream, finch: [name: finch, pool_timeout: 10_000])
+    end
+
+    test "returns an error when the instance does not exist" do
+      assert {:error, _} = ReqAdapter.read_meta(@stream, finch: Icecast.NoSuchFinch)
+    end
+  end
+
   describe "redirects" do
     test "are followed by default" do
       # the redirect target is not a stream, so we get past the redirect and
